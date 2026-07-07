@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SIMON SAYS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header { margin-bottom: 24px; }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            padding: 10px 18px;
+            min-width: 100px;
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--accent-orange);
+        }
+
+        .simon-board {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 320px;
+            margin: 0 auto 24px;
+        }
+
+        .simon-btn {
+            aspect-ratio: 1;
+            border: 2px solid var(--ink);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 3px 3px 0 var(--ink);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .simon-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+        .simon-btn.green { background: var(--accent-green); }
+        .simon-btn.red { background: var(--accent-pink); }
+        .simon-btn.yellow { background: var(--accent-yellow); }
+        .simon-btn.blue { background: var(--accent-blue); }
+
+        .simon-btn.lit.green { background: #66BB6A; box-shadow: 0 0 24px rgba(76,175,80,0.5); }
+        .simon-btn.lit.red { background: #EC407A; box-shadow: 0 0 24px rgba(233,30,99,0.5); }
+        .simon-btn.lit.yellow { background: #FFEE58; box-shadow: 0 0 24px rgba(253,216,53,0.5); }
+        .simon-btn.lit.blue { background: #42A5F5; box-shadow: 0 0 24px rgba(33,150,243,0.5); }
+
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 28px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover { color: var(--ink); }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(245, 241, 235, 0.95);
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink);
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-toggle:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .sound-toggle:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 返回游戏厅</a>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">♪</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 08</div>
+            <h1>Simon</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">关卡</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">最高</div>
+                    <div class="stat-value" id="best">1</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="simon-board">
+            <div class="simon-btn green" data-color="green"></div>
+            <div class="simon-btn red" data-color="red"></div>
+            <div class="simon-btn yellow" data-color="yellow"></div>
+            <div class="simon-btn blue" data-color="blue"></div>
+        </div>
+
+        <button class="btn" id="startBtn" onclick="startGame()">开始游戏</button>
+    </div>
+
+    <script>
+        const btns = document.querySelectorAll('.simon-btn');
+        const startBtn = document.getElementById('startBtn');
+        const levelEl = document.getElementById('level');
+        const bestEl = document.getElementById('best');
+
+        const COLORS = ['green', 'red', 'yellow', 'blue'];
+        const FREQ = { green: 329.63, red: 261.63, yellow: 392.00, blue: 440.00 };
+
+        let sequence = [];
+        let playerIdx = 0;
+        let level = 1;
+        let best = parseInt(localStorage.getItem('simon-best') || '1');
+        let locked = false;
+
+        // 音效
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(freq, type, duration, volume = 0.06) {
+            if (!soundEnabled || !audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '♪' : '✕';
+        }
+
+        function playTone(color, duration = 0.3) {
+            const btn = document.querySelector(`.simon-btn.${color}`);
+            btn.classList.add('lit');
+            playSound(FREQ[color], 'sine', duration, 0.08);
+            setTimeout(() => btn.classList.remove('lit'), duration * 1000);
+        }
+
+        function flashSequence() {
+            locked = true;
+            startBtn.classList.add('hidden');
+            playerIdx = 0;
+            let i = 0;
+            const interval = setInterval(() => {
+                playTone(sequence[i], 0.3);
+                i++;
+                if (i >= sequence.length) {
+                    clearInterval(interval);
+                    setTimeout(() => { locked = false; }, 400);
+                }
+            }, 500);
+        }
+
+        function startGame() {
+            initAudio();
+            sequence = [];
+            level = 1;
+            levelEl.textContent = level;
+            bestEl.textContent = best;
+            nextRound();
+        }
+
+        function nextRound() {
+            sequence.push(COLORS[Math.floor(Math.random() * 4)]);
+            flashSequence();
+        }
+
+        function handlePlayer(color) {
+            initAudio();
+            if (locked) return;
+            playTone(color, 0.2);
+
+            if (color !== sequence[playerIdx]) {
+                playSound(150, 'sawtooth', 0.4, 0.06);
+                locked = true;
+                startBtn.classList.remove('hidden');
+                if (level > best) {
+                    best = level - 1;
+                    bestEl.textContent = best;
+                    localStorage.setItem('simon-best', best.toString());
+                }
+                return;
+            }
+
+            playerIdx++;
+            if (playerIdx === sequence.length) {
+                level++;
+                levelEl.textContent = level;
+                locked = true;
+                setTimeout(() => {
+                    nextRound();
+                }, 700);
+            }
+        }
+
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => handlePlayer(btn.dataset.color));
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handlePlayer(btn.dataset.color);
+            }, { passive: false });
+        });
+
+        bestEl.textContent = best;
+
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

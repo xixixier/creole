@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GRAVITY - 重力弹球</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 纸张噪点纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 600px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--ink-muted);
+            line-height: 1.7;
+        }
+
+        .canvas-wrapper {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 4px 4px 0 var(--ink);
+            margin-bottom: 20px;
+        }
+
+        #gravityCanvas {
+            display: block;
+            width: 100%;
+            height: 400px;
+            background: var(--paper-dark);
+            border-radius: 8px;
+            cursor: grab;
+        }
+
+        #gravityCanvas:active {
+            cursor: grabbing;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 12px 24px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .btn-secondary {
+            background: var(--paper);
+            color: var(--ink);
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ink-muted);
+            min-width: 60px;
+        }
+
+        .slider-value {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            color: var(--accent-pink);
+            min-width: 40px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 120px;
+            height: 6px;
+            background: var(--paper-dark);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--ink);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--ink);
+        }
+
+        .hidden { display: none !important; }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(245, 241, 235, 0.95);
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink);
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-toggle:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .sound-toggle:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 返回游戏厅</a>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">♪</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 04</div>
+            <h1>Gravity</h1>
+            <p>重力弹球模拟器<br>拖拽扔球，看它们弹来弹去</p>
+        </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="gravityCanvas"></canvas>
+        </div>
+
+        <div class="slider-group">
+            <span class="slider-label">重力</span>
+            <input type="range" id="gravitySlider" min="0" max="2" step="0.1" value="0.8">
+            <span class="slider-value" id="gravityValue">0.8</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="addBall()">加个球</button>
+            <button class="btn btn-secondary" onclick="clearBalls()">清空</button>
+            <button class="btn btn-secondary" onclick="shakeBalls()">摇一摇</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gravityCanvas');
+        const ctx = canvas.getContext('2d');
+        const gravitySlider = document.getElementById('gravitySlider');
+        const gravityValueEl = document.getElementById('gravityValue');
+
+        // 音效系统
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(freq, type, duration, volume = 0.04) {
+            if (!soundEnabled || !audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function playBounceSound() {
+            const now = performance.now();
+            const last = bounceSoundCooldowns.get('global');
+            if (last && now - last < BOUNCE_SOUND_COOLDOWN) return;
+            bounceSoundCooldowns.set('global', now);
+            playSound(400, 'sine', 0.1, 0.03);
+        }
+        function playDragSound() { playSound(200, 'sine', 0.05, 0.02); }
+
+        // 设置画布大小
+        function resize() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // 重力参数
+        let gravity = 0.8;
+        let friction = 0.98;
+        let bounce = 0.7;
+
+        gravitySlider.addEventListener('input', (e) => {
+            gravity = parseFloat(e.target.value);
+            gravityValueEl.textContent = gravity.toFixed(1);
+        });
+
+        // 球的数组
+        const balls = [];
+        let draggedBall = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let mouseVelX = 0;
+        let mouseVelY = 0;
+        const bounceSoundCooldowns = new Map();
+        const BOUNCE_SOUND_COOLDOWN = 100;
+
+        // 颜色
+        const ballColors = ['#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FF9800', '#FDD835'];
+
+        function createBall(x, y, vx = 0, vy = 0) {
+            const size = 20 + Math.random() * 20;
+            const color = ballColors[Math.floor(Math.random() * ballColors.length)];
+            
+            balls.push({
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                size: size,
+                color: color,
+                isDragging: false
+            });
+        }
+
+        function getEventPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function findBallAt(x, y) {
+            for (let i = balls.length - 1; i >= 0; i--) {
+                const ball = balls[i];
+                const dx = x - ball.x;
+                const dy = y - ball.y;
+                if (dx * dx + dy * dy < ball.size * ball.size) {
+                    return ball;
+                }
+            }
+            return null;
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            const pos = getEventPos(e);
+            const ball = findBallAt(pos.x, pos.y);
+            
+            if (ball) {
+                draggedBall = ball;
+                ball.isDragging = true;
+                dragOffsetX = pos.x - ball.x;
+                dragOffsetY = pos.y - ball.y;
+                lastMouseX = pos.x;
+                lastMouseY = pos.y;
+                mouseVelX = 0;
+                mouseVelY = 0;
+            }
+        }
+
+        function moveDrag(e) {
+            if (!draggedBall) return;
+            e.preventDefault();
+            
+            const pos = getEventPos(e);
+            const newX = pos.x - dragOffsetX;
+            const newY = pos.y - dragOffsetY;
+            
+            mouseVelX = pos.x - lastMouseX;
+            mouseVelY = pos.y - lastMouseY;
+            lastMouseX = pos.x;
+            lastMouseY = pos.y;
+            
+            draggedBall.x = newX;
+            draggedBall.y = newY;
+            draggedBall.vx = 0;
+            draggedBall.vy = 0;
+        }
+
+        function endDrag() {
+            if (draggedBall) {
+                draggedBall.isDragging = false;
+                draggedBall.vx = mouseVelX * 1.5;
+                draggedBall.vy = mouseVelY * 1.5;
+                draggedBall = null;
+            }
+        }
+
+        canvas.addEventListener('mousedown', startDrag);
+        canvas.addEventListener('touchstart', startDrag, { passive: false });
+        canvas.addEventListener('mousemove', moveDrag);
+        canvas.addEventListener('touchmove', moveDrag, { passive: false });
+        canvas.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('touchend', endDrag);
+        canvas.addEventListener('mouseleave', endDrag);
+
+        function addBall() {
+            const rect = canvas.getBoundingClientRect();
+            const x = rect.width / 2 + (Math.random() - 0.5) * 100;
+            const y = 50;
+            createBall(x, y, (Math.random() - 0.5) * 5, 0);
+        }
+
+        function clearBalls() {
+            balls.length = 0;
+        }
+
+        function shakeBalls() {
+            balls.forEach(ball => {
+                ball.vx += (Math.random() - 0.5) * 30;
+                ball.vy += (Math.random() - 0.5) * 30 - 10;
+            });
+        }
+
+        function update() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const BOUNCE_THRESHOLD = 5;
+            
+            balls.forEach(ball => {
+                if (ball.isDragging) return;
+                
+                ball.vy += gravity;
+                ball.vx *= friction;
+                ball.vy *= friction;
+                
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+                
+                // 边界碰撞
+                if (ball.x - ball.size < 0) {
+                    if (ball.vx < -BOUNCE_THRESHOLD) {
+                        ball.vx *= -bounce;
+                        playBounceSound();
+                    } else {
+                        ball.vx = 0;
+                    }
+                    ball.x = ball.size;
+                }
+                if (ball.x + ball.size > width) {
+                    if (ball.vx > BOUNCE_THRESHOLD) {
+                        ball.vx *= -bounce;
+                        playBounceSound();
+                    } else {
+                        ball.vx = 0;
+                    }
+                    ball.x = width - ball.size;
+                }
+                if (ball.y - ball.size < 0) {
+                    if (ball.vy < -BOUNCE_THRESHOLD) {
+                        ball.vy *= -bounce;
+                        playBounceSound();
+                    } else {
+                        ball.vy = 0;
+                    }
+                    ball.y = ball.size;
+                }
+                if (ball.y + ball.size > height) {
+                    if (ball.vy > BOUNCE_THRESHOLD) {
+                        ball.vy *= -bounce;
+                        playBounceSound();
+                    } else {
+                        ball.vy = 0;
+                    }
+                    ball.y = height - ball.size;
+                }
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 网格背景
+            ctx.strokeStyle = 'rgba(28, 27, 26, 0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = 30;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // 球
+            balls.forEach(ball => {
+                // 阴影
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.beginPath();
+                ctx.arc(ball.x + 3, ball.y + 3, ball.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 球体
+                ctx.fillStyle = ball.color;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 高光
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(ball.x - ball.size * 0.3, ball.y - ball.size * 0.3, ball.size * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 边框
+                ctx.strokeStyle = '#1C1B1A';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 初始化一些球
+        setTimeout(() => {
+            for (let i = 0; i < 3; i++) {
+                const rect = canvas.getBoundingClientRect();
+                createBall(100 + i * 80, 50 + i * 30, (Math.random() - 0.5) * 5, 0);
+            }
+            gameLoop();
+        }, 100);
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '♪' : '✕';
+        }
+
+        // 初始化音效
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

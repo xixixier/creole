@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PIXEL ART - 像素画板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 纸张噪点纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--ink-muted);
+            line-height: 1.7;
+        }
+
+        .canvas-wrapper {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 4px 4px 0 var(--ink);
+            margin-bottom: 24px;
+            display: inline-block;
+        }
+
+        .pixel-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 3px;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        .pixel-cell {
+            aspect-ratio: 1;
+            background: var(--paper-dark);
+            border: 1px solid var(--paper-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .pixel-cell:hover {
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .pixel-cell:active {
+            transform: scale(0.9);
+        }
+
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .color-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--ink);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .color-dot:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .color-dot:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink-muted);
+        }
+
+        .color-dot.active {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 12px 24px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .btn-secondary {
+            background: var(--paper);
+            color: var(--ink);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--ink);
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(245, 241, 235, 0.95);
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink);
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-toggle:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .sound-toggle:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 返回游戏厅</a>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">♪</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 05</div>
+            <h1>Pixel Art</h1>
+            <p>像素画板<br>点击格子创作你的像素艺术</p>
+        </div>
+
+        <div class="color-palette" id="colorPalette"></div>
+
+        <div class="canvas-wrapper">
+            <div class="pixel-grid" id="pixelGrid"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="fillRandom()">随机填充</button>
+            <button class="btn btn-secondary" onclick="clearGrid()">清空</button>
+            <button class="btn btn-secondary" onclick="mirrorGrid()">镜像对称</button>
+        </div>
+    </div>
+
+    <script>
+        const pixelGrid = document.getElementById('pixelGrid');
+        const colorPalette = document.getElementById('colorPalette');
+        
+        const GRID_SIZE = 8;
+        const colors = [
+            '#E91E63', '#9C27B0', '#673AB7', '#3F51B5',
+            '#2196F3', '#03A9F4', '#00BCD4', '#009688',
+            '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B',
+            '#FFC107', '#FF9800', '#FF5722', '#1C1B1A'
+        ];
+        
+        // 音效
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(freq, type, duration, volume = 0.04) {
+            if (!soundEnabled || !audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '♪' : '✕';
+        }
+
+        let selectedColor = colors[0];
+        let pixelData = Array(GRID_SIZE * GRID_SIZE).fill(null);
+
+        // 初始化调色板
+        function initPalette() {
+            colors.forEach((color, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'color-dot' + (index === 0 ? ' active' : '');
+                dot.style.background = color;
+                dot.onclick = () => {
+                    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                    dot.classList.add('active');
+                    selectedColor = color;
+                };
+                colorPalette.appendChild(dot);
+            });
+        }
+
+        // 初始化网格
+        function initGrid() {
+            pixelGrid.innerHTML = '';
+            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'pixel-cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => togglePixel(i));
+                pixelGrid.appendChild(cell);
+            }
+        }
+
+        function togglePixel(index) {
+            const current = pixelData[index];
+            if (current === null) {
+                pixelData[index] = selectedColor;
+                playSound(600, 'sine', 0.05, 0.03);
+            } else if (current === selectedColor) {
+                pixelData[index] = null;
+                playSound(400, 'sine', 0.05, 0.03);
+            } else {
+                pixelData[index] = selectedColor;
+                playSound(600, 'sine', 0.05, 0.03);
+            }
+            renderPixels();
+        }
+
+        function renderPixels() {
+            const cells = pixelGrid.querySelectorAll('.pixel-cell');
+            cells.forEach((cell, i) => {
+                cell.style.background = pixelData[i] || '#E8E4DD';
+            });
+        }
+
+        function fillRandom() {
+            pixelData = pixelData.map(() => {
+                return Math.random() > 0.4 ? colors[Math.floor(Math.random() * colors.length)] : null;
+            });
+            renderPixels();
+            playSound(500, 'sine', 0.1, 0.03);
+        }
+
+        function clearGrid() {
+            pixelData = Array(GRID_SIZE * GRID_SIZE).fill(null);
+            renderPixels();
+            playSound(300, 'sine', 0.1, 0.03);
+        }
+
+        function mirrorGrid() {
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < Math.floor(GRID_SIZE / 2); col++) {
+                    const leftIdx = row * GRID_SIZE + col;
+                    const rightIdx = row * GRID_SIZE + (GRID_SIZE - 1 - col);
+                    if (pixelData[leftIdx] !== null && pixelData[rightIdx] === null) {
+                        pixelData[rightIdx] = pixelData[leftIdx];
+                    } else if (pixelData[rightIdx] !== null && pixelData[leftIdx] === null) {
+                        pixelData[leftIdx] = pixelData[rightIdx];
+                    }
+                }
+            }
+            renderPixels();
+            playSound(700, 'sine', 0.1, 0.03);
+        }
+
+        // 初始化
+        initPalette();
+        initGrid();
+        renderPixels();
+        
+        // 初始化音效
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

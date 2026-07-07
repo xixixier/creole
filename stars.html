@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Star Map — 数字奇物柜</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: #0D0D0D;
+            color: var(--paper);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: rgba(245, 241, 235, 0.6);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            background: rgba(13, 13, 13, 0.5);
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 241, 235, 0.15);
+        }
+
+        .back-link:hover { 
+            color: var(--paper);
+            border-color: rgba(245, 241, 235, 0.4);
+        }
+
+        #starCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            cursor: crosshair;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .header { 
+            margin-bottom: 24px;
+            pointer-events: auto;
+        }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: rgba(245, 241, 235, 0.5);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            text-shadow: 0 0 40px rgba(245, 241, 235, 0.15);
+        }
+
+        .header p {
+            font-size: 14px;
+            color: rgba(245, 241, 235, 0.6);
+            line-height: 1.7;
+        }
+
+        .star-info {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: rgba(13, 13, 13, 0.85);
+            border: 1px solid rgba(245, 241, 235, 0.2);
+            border-radius: 14px;
+            padding: 16px 24px;
+            text-align: center;
+            min-width: 260px;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .star-info.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .star-info-symbol {
+            width: 32px;
+            height: 32px;
+            margin: 0 auto 8px;
+        }
+
+        .star-info-symbol svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .star-info-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .star-info-text {
+            font-size: 12px;
+            color: rgba(245, 241, 235, 0.7);
+            line-height: 1.6;
+        }
+
+        .star-info-hint {
+            font-size: 10px;
+            color: rgba(245, 241, 235, 0.4);
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 20;
+            display: flex;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .ctrl-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid rgba(245, 241, 235, 0.2);
+            background: rgba(13, 13, 13, 0.6);
+            color: rgba(245, 241, 235, 0.7);
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .ctrl-btn:hover {
+            border-color: rgba(245, 241, 235, 0.5);
+            color: var(--paper);
+        }
+
+        .star-count {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 20;
+            font-size: 11px;
+            color: rgba(245, 241, 235, 0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starCanvas"></canvas>
+    
+    <a href="curio.html" class="back-link">← 返回奇物柜</a>
+    
+    <div class="controls">
+        <button class="ctrl-btn" onclick="regenerateStars()" title="重新生成星空">⟳</button>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Curio 06</div>
+            <h1>Star Map</h1>
+            <p>一片属于你的星空。每颗星都有一个没人在听的故事。</p>
+        </div>
+    </div>
+    
+    <div class="star-info" id="starInfo">
+        <div class="star-info-symbol" id="starSymbol"></div>
+        <div class="star-info-title" id="starTitle">--</div>
+        <div class="star-info-text" id="starText">--</div>
+        <div class="star-info-hint">点击空白处关闭</div>
+    </div>
+    
+    <div class="star-count" id="starCount">0 颗星</div>
+
+    <script>
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        const starInfo = document.getElementById('starInfo');
+        const starSymbol = document.getElementById('starSymbol');
+        const starTitle = document.getElementById('starTitle');
+        const starText = document.getElementById('starText');
+        const starCountEl = document.getElementById('starCount');
+        
+        let stars = [];
+        let constellations = [];
+        let animationId;
+        let mouse = { x: 0, y: 0 };
+        
+        const starSymbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const starStories = [
+            '这颗星属于一个在深夜等地铁的人。他/她不知道自己等的不是车，而是一个还没发生的决定。',
+            '这颗星是一个被撤回的消息。发送者打了又删，最后决定让它永远停留在草稿箱。',
+            '这颗星属于一首只唱过一次的歌。在 ktv 的包厢里，某人突然点了它，唱到一半哭了，然后切歌。',
+            '这颗星是一个没寄出的地址。信纸已经泛黄，字迹开始模糊，但寄信人一直没找到勇气。',
+            '这颗星属于一个没兑现的约定。"改天一起吃饭"——改天是哪天？这颗星知道。',
+            '这颗星是一个被忽略的通知。APP 右上角的红点，某天突然消失，你才想起它曾提醒过你什么。',
+            '这颗星属于一个偷偷截的屏。不是聊天记录，是某个人的朋友圈背景，后来对方换了，截屏还在相册里。',
+            '这颗星是一个没拨出去的号码。输入了又删除，删除了又输入，最后手机没电了。',
+            '这颗星属于一个突然的顿悟。在洗澡的时候，在骑车的路上，在开会走神的瞬间——然后你忘了它。',
+            '这颗星是一个被取消的收藏。你喜欢过某支乐队、某部电影、某个人，后来取消了收藏，但歌单还记得。',
+            '这颗星属于一个没说出口的抱歉。对方可能已经忘了，但你的这颗星还记得当时的沉默有多重。',
+            '这颗星是一个没完成的梦。醒来时只记得一片光，和一个你叫不出名字的人。'
+        ];
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        function randomStar() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 1.8 + 0.4,
+                twinkleSpeed: Math.random() * 0.02 + 0.005,
+                twinklePhase: Math.random() * Math.PI * 2,
+                brightness: Math.random() * 0.5 + 0.5,
+                symbol: starSymbols[Math.floor(Math.random() * starSymbols.length)],
+                story: starStories[Math.floor(Math.random() * starStories.length)],
+                isSpecial: Math.random() < 0.08
+            };
+        }
+        
+        function generateConstellations() {
+            constellations = [];
+            const specials = stars.filter(s => s.isSpecial);
+            for (let i = 0; i < specials.length - 1; i++) {
+                if (Math.random() < 0.3) {
+                    constellations.push({
+                        from: specials[i],
+                        to: specials[i + 1]
+                    });
+                }
+            }
+        }
+        
+        function generateStars() {
+            const count = Math.min(150, Math.floor((canvas.width * canvas.height) / 8000));
+            stars = [];
+            for (let i = 0; i < count; i++) {
+                stars.push(randomStar());
+            }
+            generateConstellations();
+            starCountEl.textContent = stars.length + ' 颗星';
+        }
+        
+        function drawStars(time) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制星座连线
+            ctx.strokeStyle = 'rgba(245, 241, 235, 0.06)';
+            ctx.lineWidth = 0.5;
+            constellations.forEach(c => {
+                ctx.beginPath();
+                ctx.moveTo(c.from.x, c.from.y);
+                ctx.lineTo(c.to.x, c.to.y);
+                ctx.stroke();
+            });
+            
+            // 绘制星星
+            stars.forEach(star => {
+                const twinkle = Math.sin(time * star.twinkleSpeed + star.twinklePhase);
+                const alpha = star.brightness * (0.6 + twinkle * 0.4);
+                const size = star.size * (0.9 + twinkle * 0.1);
+                
+                // 光晕
+                if (star.isSpecial) {
+                    const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, size * 4);
+                    glow.addColorStop(0, 'rgba(245, 241, 235, 0.15)');
+                    glow.addColorStop(1, 'rgba(245, 241, 235, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, size * 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // 星体
+                ctx.fillStyle = `rgba(245, 241, 235, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            animationId = requestAnimationFrame(drawStars);
+        }
+        
+        function findStarAt(x, y) {
+            const hitRadius = 20;
+            return stars.find(s => {
+                const dx = s.x - x;
+                const dy = s.y - y;
+                return Math.sqrt(dx * dx + dy * dy) < hitRadius;
+            });
+        }
+        
+        function showStarInfo(star) {
+            starSymbol.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(245,241,235,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L13.5 8.5 L20 9.5 L14.5 13.5 L16 20 L12 16.5 L8 20 L9.5 13.5 L4 9.5 L10.5 8.5 Z" fill="rgba(245,241,235,0.3)" stroke="rgba(245,241,235,0.9)"/></svg>';
+            starTitle.textContent = star.isSpecial ? '特别的一颗星' : '一颗普通的星';
+            starText.textContent = star.story;
+            starInfo.classList.add('show');
+        }
+        
+        function hideStarInfo() {
+            starInfo.classList.remove('show');
+        }
+        
+        function regenerateStars() {
+            cancelAnimationFrame(animationId);
+            generateStars();
+            drawStars(performance.now());
+            hideStarInfo();
+        }
+        
+        canvas.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        
+        canvas.addEventListener('click', e => {
+            const star = findStarAt(e.clientX, e.clientY);
+            if (star) {
+                showStarInfo(star);
+            } else {
+                hideStarInfo();
+            }
+        });
+        
+        window.addEventListener('resize', () => {
+            resize();
+            generateStars();
+        });
+        
+        // 初始化
+        resize();
+        generateStars();
+        drawStars(performance.now());
+    </script>
+</body>
+</html>

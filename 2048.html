@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2048</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 纸张噪点纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            padding: 12px 18px;
+            min-width: 90px;
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--accent-pink);
+        }
+
+        /* 游戏板 */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 12px;
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 4px 4px 0 var(--ink);
+            aspect-ratio: 1;
+        }
+
+        .tile {
+            background: var(--paper-dark);
+            border: 1px solid var(--paper-dark);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(18px, 5vw, 32px);
+            font-weight: 900;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .tile-2 { background: #E8E4DD; color: var(--ink); }
+        .tile-4 { background: #D5D0C8; color: var(--ink); }
+        .tile-8 { background: var(--accent-pink); color: white; }
+        .tile-16 { background: var(--accent-pink); color: white; }
+        .tile-32 { background: var(--accent-orange); color: white; }
+        .tile-64 { background: var(--accent-orange); color: white; }
+        .tile-128 { background: var(--accent-yellow); color: var(--ink); }
+        .tile-256 { background: var(--accent-yellow); color: var(--ink); }
+        .tile-512 { background: var(--accent-blue); color: white; }
+        .tile-1024 { background: var(--accent-blue); color: white; }
+        .tile-2048 { background: var(--accent-green); color: white; animation: winGlow 1.5s infinite; }
+        .tile-super { background: var(--accent-purple); color: white; }
+
+        @keyframes winGlow {
+            0%, 100% { box-shadow: 0 0 8px rgba(76, 175, 80, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
+        }
+
+        .tile.new {
+            animation: popIn 0.25s ease-out;
+        }
+
+        .tile.merged {
+            animation: merge 0.25s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes merge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* 按钮 */
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 28px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        /* 游戏结束覆盖层 */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(245, 241, 235, 0.97);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            text-align: center;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+        }
+
+        .overlay-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .overlay h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .overlay p {
+            font-size: 15px;
+            color: var(--ink-muted);
+            margin-bottom: 32px;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--ink);
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(245, 241, 235, 0.95);
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink);
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-toggle:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .sound-toggle:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        .hidden { display: none !important; }
+
+        .controls-hint {
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--ink-muted);
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 返回游戏厅</a>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">♪</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 03</div>
+            <h1>2048</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">得分</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">最佳</div>
+                    <div class="stat-value" id="best">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-board" id="board"></div>
+
+        <button class="btn" onclick="newGame()">新游戏</button>
+
+        <div class="controls-hint">
+            方向键或滑动移动方块
+        </div>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay hidden">
+        <div class="overlay-number" id="overlayNumber">Game Over</div>
+        <h2 id="overlayTitle">GAME OVER</h2>
+        <p>最终得分: <span id="finalScore">0</span></p>
+        <button class="btn" onclick="newGame()">再玩一次</button>
+        <a href="games.html" class="back-link">← 返回游戏厅</a>
+    </div>
+
+    <script>
+        const boardEl = document.getElementById('board');
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const overlay = document.getElementById('gameOverOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayNumber = document.getElementById('overlayNumber');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        let grid = [];
+        let score = 0;
+        let best = parseInt(localStorage.getItem('2048-best') || '0');
+        let gameOver = false;
+        let won = false;
+
+        // 音效
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(freq, type, duration, volume = 0.04) {
+            if (!soundEnabled || !audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '♪' : '✕';
+        }
+
+        function initGrid() {
+            grid = Array(4).fill(null).map(() => Array(4).fill(0));
+            score = 0;
+            gameOver = false;
+            won = false;
+            scoreEl.textContent = '0';
+            bestEl.textContent = best;
+            overlay.classList.add('hidden');
+            addRandomTile();
+            addRandomTile();
+            render();
+        }
+
+        function addRandomTile() {
+            const empty = [];
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (grid[r][c] === 0) empty.push({r, c});
+                }
+            }
+            if (empty.length === 0) return false;
+            
+            const {r, c} = empty[Math.floor(Math.random() * empty.length)];
+            grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+            return {r, c};
+        }
+
+        function render() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    const tile = document.createElement('div');
+                    const value = grid[r][c];
+                    const tileClass = value === 0 ? 'tile tile-2' : 
+                                     value <= 2048 ? `tile tile-${value}` : 'tile tile-super';
+                    tile.className = tileClass;
+                    tile.textContent = value === 0 ? '' : value;
+                    boardEl.appendChild(tile);
+                }
+            }
+        }
+
+        function slide(row) {
+            let arr = row.filter(v => v !== 0);
+            
+            for (let i = 0; i < arr.length - 1; i++) {
+                if (arr[i] === arr[i + 1]) {
+                    arr[i] *= 2;
+                    score += arr[i];
+                    arr.splice(i + 1, 1);
+                    playSound(400, 'sine', 0.1, 0.03);
+                    
+                    if (arr[i] === 2048 && !won) {
+                        won = true;
+                        setTimeout(() => {
+                            overlayNumber.textContent = 'Victory';
+                            overlayTitle.textContent = 'YOU WIN!';
+                            finalScoreEl.textContent = score;
+                            overlay.classList.remove('hidden');
+                        }, 300);
+                    }
+                }
+            }
+            
+            while (arr.length < 4) arr.push(0);
+            return arr;
+        }
+
+        function move(direction) {
+            if (gameOver) return;
+            
+            let moved = false;
+            const oldGrid = JSON.stringify(grid);
+            
+            if (direction === 'left') {
+                for (let r = 0; r < 4; r++) {
+                    grid[r] = slide(grid[r]);
+                }
+            } else if (direction === 'right') {
+                for (let r = 0; r < 4; r++) {
+                    grid[r] = slide(grid[r].reverse()).reverse();
+                }
+            } else if (direction === 'up') {
+                for (let c = 0; c < 4; c++) {
+                    let col = [grid[0][c], grid[1][c], grid[2][c], grid[3][c]];
+                    col = slide(col);
+                    for (let r = 0; r < 4; r++) grid[r][c] = col[r];
+                }
+            } else if (direction === 'down') {
+                for (let c = 0; c < 4; c++) {
+                    let col = [grid[3][c], grid[2][c], grid[1][c], grid[0][c]];
+                    col = slide(col).reverse();
+                    for (let r = 0; r < 4; r++) grid[r][c] = col[r];
+                }
+            }
+            
+            if (JSON.stringify(grid) !== oldGrid) {
+                scoreEl.textContent = score;
+                if (score > best) {
+                    best = score;
+                    bestEl.textContent = best;
+                    localStorage.setItem('2048-best', best.toString());
+                }
+                addRandomTile();
+                render();
+                playSound(300, 'sine', 0.05, 0.02);
+                
+                if (!canMove()) {
+                    gameOver = true;
+                    setTimeout(() => {
+                        overlayNumber.textContent = 'Game Over';
+                        overlayTitle.textContent = 'GAME OVER';
+                        finalScoreEl.textContent = score;
+                        overlay.classList.remove('hidden');
+                    }, 300);
+                }
+            }
+        }
+
+        function canMove() {
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (grid[r][c] === 0) return true;
+                }
+            }
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (c < 3 && grid[r][c] === grid[r][c + 1]) return true;
+                    if (r < 3 && grid[r][c] === grid[r + 1][c]) return true;
+                }
+            }
+            return false;
+        }
+
+        function newGame() {
+            initAudio();
+            initGrid();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+                const dirMap = {
+                    'ArrowUp': 'up',
+                    'ArrowDown': 'down',
+                    'ArrowLeft': 'left',
+                    'ArrowRight': 'right'
+                };
+                move(dirMap[e.code]);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (!touchStartX || !touchStartY) return;
+            
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            
+            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return;
+            
+            if (Math.abs(dx) > Math.abs(dy)) {
+                move(dx > 0 ? 'right' : 'left');
+            } else {
+                move(dy > 0 ? 'down' : 'up');
+            }
+            
+            touchStartX = 0;
+            touchStartY = 0;
+        });
+
+        initGrid();
+        bestEl.textContent = best;
+        
+        // 初始化音效
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

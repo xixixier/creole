@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Memory Box — 数字奇物柜</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover { color: var(--ink); }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header { margin-bottom: 32px; }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--ink-muted);
+            line-height: 1.7;
+        }
+
+        .box {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 6px 6px 0 var(--ink);
+            margin-bottom: 20px;
+        }
+
+        .box-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .box textarea {
+            width: 100%;
+            min-height: 120px;
+            border: 1.5px solid var(--ink);
+            border-radius: 10px;
+            padding: 12px;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            font-size: 14px;
+            line-height: 1.7;
+            resize: none;
+            background: var(--paper);
+            color: var(--ink);
+        }
+
+        .box textarea:focus {
+            outline: none;
+            border-color: var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .box textarea::placeholder {
+            color: var(--ink-muted);
+            opacity: 0.6;
+        }
+
+        .seal-btn {
+            margin-top: 16px;
+            padding: 12px 28px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+            width: 100%;
+        }
+
+        .seal-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .seal-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .seal-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .archive {
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .archive-item {
+            background: white;
+            border: 1.5px solid var(--ink);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 2px 2px 0 var(--ink);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .archive-item:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .archive-item-date {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 8px;
+        }
+
+        .archive-item-text {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--ink);
+        }
+
+        .archive-empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--ink-muted);
+            font-size: 14px;
+        }
+
+        .empty-box {
+            background: white;
+            border: 2px dashed var(--ink-muted);
+            border-radius: 16px;
+            padding: 40px;
+            opacity: 0.6;
+        }
+
+        .empty-box-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            opacity: 0.4;
+        }
+
+        .empty-box-text {
+            font-size: 14px;
+            color: var(--ink-muted);
+        }
+
+        .sealed-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(245, 241, 235, 0.95);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s;
+        }
+
+        .sealed-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sealed-content {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .sealed-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .sealed-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .sealed-text {
+            font-size: 14px;
+            color: var(--ink-muted);
+            margin-bottom: 24px;
+        }
+
+        .sealed-close {
+            padding: 10px 24px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <a href="curio.html" class="back-link">← 返回奇物柜</a>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Curio 03</div>
+            <h1>Memory Box</h1>
+            <p>把此刻的心情封存在这里。某天你回来，它会等你。</p>
+        </div>
+
+        <div class="box">
+            <div class="box-title">封存记忆</div>
+            <textarea id="memoryInput" placeholder="写下此刻你想记住的..."></textarea>
+            <button class="seal-btn" id="sealBtn" onclick="sealMemory()">封存</button>
+        </div>
+
+        <div id="archiveSection" style="display: none;">
+            <div class="box archive" id="archive"></div>
+        </div>
+
+        <div id="emptyArchive" class="empty-box">
+            <div class="empty-box-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <line x1="4" y1="10" x2="20" y2="10"/>
+                    <circle cx="12" cy="7" r="1.5" fill="var(--ink-muted)" stroke="none"/>
+                </svg>
+            </div>
+            <div class="empty-box-text">还没有封存的记忆。<br>写下第一段，封存它。</div>
+        </div>
+    </div>
+
+    <div class="sealed-overlay" id="sealedOverlay">
+        <div class="sealed-content">
+            <div class="sealed-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2 L14 9 L21 9 L15 14 L17 21 L12 17 L7 21 L9 14 L3 9 L10 9 Z" fill="var(--accent-yellow)" stroke="var(--ink)" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <div class="sealed-title">已封存</div>
+            <div class="sealed-text">这段记忆已经安全地放在盒子里了。<br>它会一直等你回来。</div>
+            <button class="sealed-close" onclick="closeSealed()">继续</button>
+        </div>
+    </div>
+
+    <script>
+        const memoryInput = document.getElementById('memoryInput');
+        const sealBtn = document.getElementById('sealBtn');
+        const archiveSection = document.getElementById('archiveSection');
+        const archive = document.getElementById('archive');
+        const emptyArchive = document.getElementById('emptyArchive');
+        const sealedOverlay = document.getElementById('sealedOverlay');
+        
+        function getMemories() {
+            const data = localStorage.getItem('memoryBox');
+            return data ? JSON.parse(data) : [];
+        }
+        
+        function saveMemory(text) {
+            const memories = getMemories();
+            memories.unshift({
+                text,
+                date: new Date().toISOString(),
+                id: Date.now()
+            });
+            localStorage.setItem('memoryBox', JSON.stringify(memories));
+            renderArchive();
+        }
+        
+        function renderArchive() {
+            const memories = getMemories();
+            if (memories.length === 0) {
+                archiveSection.style.display = 'none';
+                emptyArchive.style.display = 'block';
+                return;
+            }
+            archiveSection.style.display = 'block';
+            emptyArchive.style.display = 'none';
+            
+            archive.innerHTML = memories.map(m => {
+                const date = new Date(m.date);
+                const dateStr = date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                return `
+                    <div class="archive-item">
+                        <div class="archive-item-date">${dateStr}</div>
+                        <div class="archive-item-text">${escapeHtml(m.text)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function sealMemory() {
+            const text = memoryInput.value.trim();
+            if (!text) {
+                memoryInput.focus();
+                return;
+            }
+            
+            saveMemory(text);
+            memoryInput.value = '';
+            sealedOverlay.classList.add('show');
+        }
+        
+        function closeSealed() {
+            sealedOverlay.classList.remove('show');
+        }
+        
+        // 初始化
+        renderArchive();
+    </script>
+</body>
+</html>

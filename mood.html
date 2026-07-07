@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mood Palette — 数字奇物柜</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover { color: var(--ink); }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header { margin-bottom: 32px; }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--ink-muted);
+            line-height: 1.7;
+        }
+
+        .palette {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 6px 6px 0 var(--ink);
+            margin-bottom: 24px;
+        }
+
+        .palette-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .palette-name {
+            font-size: 13px;
+            color: var(--ink-muted);
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .color-strip {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .color-swatch {
+            flex: 1;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 1.5px solid var(--ink);
+            box-shadow: 2px 2px 0 var(--ink);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-swatch:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .color-swatch:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        .color-hex {
+            position: absolute;
+            bottom: 4px;
+            left: 0;
+            right: 0;
+            font-size: 9px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .mood-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--ink-muted);
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--paper);
+            border-radius: 10px;
+            border: 1px solid var(--paper-dark);
+        }
+
+        .generate-btn {
+            padding: 14px 32px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .generate-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .generate-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .copy-hint {
+            font-size: 11px;
+            color: var(--ink-muted);
+            margin-top: 12px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <a href="curio.html" class="back-link">← 返回奇物柜</a>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Curio 04</div>
+            <h1>Mood Palette</h1>
+            <p>此刻的心情是什么颜色？点击色块复制色值。</p>
+        </div>
+
+        <div class="palette">
+            <div class="palette-title" id="paletteName">--</div>
+            <div class="palette-name" id="paletteDesc">--</div>
+            <div class="color-strip" id="colorStrip"></div>
+            <div class="mood-text" id="moodText">点击下方按钮，生成属于此刻情绪的色彩。</div>
+        </div>
+
+        <button class="generate-btn" onclick="generatePalette()">感知此刻</button>
+        <div class="copy-hint">点击色块复制色值</div>
+    </div>
+
+    <script>
+        const palettes = [
+            {
+                name: '清晨的等待',
+                desc: '天还没亮透，但你已经开始期待今天了。',
+                colors: ['#F5F1EB', '#E8E4DD', '#D4C4B5', '#A89F91', '#6B6966'],
+                text: '这种颜色适合安静地喝一杯水，什么都不想，只是等待。'
+            },
+            {
+                name: '午后的沉默',
+                desc: '阳光斜射进房间，尘埃在光柱里跳舞。',
+                colors: ['#FFF8E1', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726'],
+                text: '这是思考的颜色。很多决定都是在午后做的，虽然你当时没意识到。'
+            },
+            {
+                name: '雨天的窗',
+                desc: '玻璃上都是水痕，外面世界模糊了。',
+                colors: ['#ECEFF1', '#CFD8DC', '#B0BEC5', '#90A4AE', '#607D8B'],
+                text: '雨声是最好的白噪音。在这种颜色里，你可以放心地难过。'
+            },
+            {
+                name: '深夜的信号',
+                desc: '城市睡了，但你的屏幕还亮着。',
+                colors: ['#1C1B1A', '#2D2C2B', '#3E3D3C', '#4F4E4D', '#6B6966'],
+                text: '这种颜色里藏着最多秘密。如果你现在处于这种颜色，说明你还没准备好结束今天。'
+            },
+            {
+                name: '春天的错觉',
+                desc: '你以为冬天过去了，但风里还有一点冷。',
+                colors: ['#F3E5F5', '#E1BEE7', '#CE93D8', '#BA68C8', '#AB47BC'],
+                text: '这种颜色代表希望，但也代表不确定性。你正在两者之间。'
+            },
+            {
+                name: '夏日的疲惫',
+                desc: '阳光太毒了，连影子都懒得动。',
+                colors: ['#FFF3E0', '#FFE0B2', '#FFCC80', '#FFB74D', '#FF8F00'],
+                text: '这种颜色告诉你：该休息了。不是放弃，只是休息。'
+            },
+            {
+                name: '秋天的答案',
+                desc: '叶子落下来的时候，问题突然有了答案。',
+                colors: ['#EFEBE9', '#D7CCC8', '#BCAAA4', '#A1887F', '#8D6E63'],
+                text: '秋天是收获的颜色。你之前种的因，现在开始结果了。'
+            },
+            {
+                name: '冬日的清醒',
+                desc: '空气很冷，但你的头脑异常清晰。',
+                colors: ['#ECEFF1', '#CFD8DC', '#B0BEC5', '#78909C', '#546E7A'],
+                text: '这种颜色适合做决定。冷冽、直接、不留情面。'
+            }
+        ];
+
+        const paletteName = document.getElementById('paletteName');
+        const paletteDesc = document.getElementById('paletteDesc');
+        const colorStrip = document.getElementById('colorStrip');
+        const moodText = document.getElementById('moodText');
+        
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+        
+        function getContrastColor(hex) {
+            const rgb = hexToRgb(hex);
+            if (!rgb) return '#1C1B1A';
+            const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+            return brightness > 128 ? '#1C1B1A' : '#F5F1EB';
+        }
+        
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+            }
+        }
+        
+        function generatePalette() {
+            const palette = palettes[Math.floor(Math.random() * palettes.length)];
+            paletteName.textContent = palette.name;
+            paletteDesc.textContent = palette.desc;
+            moodText.textContent = palette.text;
+            
+            colorStrip.innerHTML = palette.colors.map(hex => {
+                const textColor = getContrastColor(hex);
+                return `
+                    <div class="color-swatch" style="background: ${hex};" onclick="copyToClipboard('${hex}')" title="点击复制 ${hex}">
+                        <div class="color-hex" style="color: ${textColor};">${hex}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 初始化
+        generatePalette();
+    </script>
+</body>
+</html>

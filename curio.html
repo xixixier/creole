@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Creole 的异想小站 — Chapter 02</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            padding: 100px 0 80px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 14px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(48px, 10vw, 120px);
+            font-weight: 900;
+            line-height: 0.9;
+            letter-spacing: -3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            color: var(--ink-muted);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        .divider {
+            width: 60px;
+            height: 2px;
+            background: var(--ink);
+            margin: 40px auto;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            padding: 40px 0 100px;
+        }
+
+        .game-card {
+            position: relative;
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            padding: 32px;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 
+                4px 4px 0 var(--ink),
+                8px 8px 0 rgba(0,0,0,0.05);
+        }
+
+        .game-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 
+                6px 6px 0 var(--ink),
+                12px 12px 0 rgba(0,0,0,0.08);
+        }
+
+        .game-card:active {
+            transform: translate(2px, 2px);
+            box-shadow: 
+                2px 2px 0 var(--ink),
+                4px 4px 0 rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .card-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 14px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 2px;
+        }
+
+        .card-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2.5px solid var(--ink);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .card-icon svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .card-desc {
+            font-size: 15px;
+            color: var(--ink-muted);
+            line-height: 1.7;
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--paper-dark);
+        }
+
+        .card-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+        }
+
+        .card-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .game-card:hover .card-arrow {
+            background: var(--ink);
+            color: white;
+            transform: rotate(-45deg);
+        }
+
+        .game-card:nth-child(1) .card-icon { background: var(--accent-purple); }
+        .game-card:nth-child(2) .card-icon { background: var(--accent-pink); }
+        .game-card:nth-child(3) .card-icon { background: var(--accent-blue); }
+        .game-card:nth-child(4) .card-icon { background: var(--accent-green); }
+        .game-card:nth-child(5) .card-icon { background: var(--accent-orange); }
+        .game-card:nth-child(6) .card-icon { background: var(--accent-yellow); }
+
+        .footer {
+            text-align: center;
+            padding: 60px 20px;
+            border-top: 2px solid var(--ink);
+            margin-top: 40px;
+        }
+
+        .footer-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: var(--ink-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover { color: var(--ink); }
+
+        @media (max-width: 640px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            .header {
+                padding: 60px 0 50px;
+            }
+            .game-card {
+                padding: 24px;
+            }
+            .card-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← 返回首页</a>
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 02</div>
+            <h1>数字<br>奇物柜</h1>
+            <p class="header-subtitle">
+                一些更小、更安静的数字物件。<br>
+                没有规则，没有胜负，<br>
+                只是存在，然后被你遇见。
+            </p>
+            <div class="divider"></div>
+        </div>
+
+        <div class="games-grid">
+            <a href="clock.html" class="game-card">
+                <div class="card-header">
+                    <span class="card-number">01</span>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7 L12 12 L16 14" stroke-width="2.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="card-title">Eternal Clock</h2>
+                <p class="card-desc">
+                    一座不走寻常时间的钟。它用秒数、呼吸、或者某种你自己都说不清的单位，计量此刻。
+                </p>
+                <div class="card-footer">
+                    <span class="card-tag">时间</span>
+                    <div class="card-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="oracle.html" class="game-card">
+                <div class="card-header">
+                    <span class="card-number">02</span>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="8"/>
+                            <circle cx="12" cy="12" r="3" fill="white" stroke="none" opacity="0.5"/>
+                            <circle cx="12" cy="20" r="1.2" fill="white" stroke="none"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="card-title">Oracle</h2>
+                <p class="card-desc">
+                    数字占卜卡。点击抽取一张，得到一句只属于此刻的、莫名其妙却很对的话。
+                </p>
+                <div class="card-footer">
+                    <span class="card-tag">占卜</span>
+                    <div class="card-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="memory-box.html" class="game-card">
+                <div class="card-header">
+                    <span class="card-number">03</span>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <line x1="4" y1="10" x2="20" y2="10"/>
+                            <circle cx="12" cy="7" r="1.8" fill="white" stroke="none"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="card-title">Memory Box</h2>
+                <p class="card-desc">
+                    一个可以封存记忆的盒子。写下一段话，封起来，某天再打开。
+                </p>
+                <div class="card-footer">
+                    <span class="card-tag">记忆</span>
+                    <div class="card-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="mood.html" class="game-card">
+                <div class="card-header">
+                    <span class="card-number">04</span>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"/>
+                            <circle cx="9" cy="9" r="2" fill="white" stroke="none"/>
+                            <circle cx="15" cy="9" r="2" fill="white" stroke="none"/>
+                            <circle cx="9" cy="15" r="2" fill="white" stroke="none"/>
+                            <circle cx="15" cy="15" r="2" fill="white" stroke="none"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="card-title">Mood Palette</h2>
+                <p class="card-desc">
+                    此刻的心情是什么颜色？点击生成一套只属于你现在情绪的色彩。
+                </p>
+                <div class="card-footer">
+                    <span class="card-tag">情绪</span>
+                    <div class="card-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="season.html" class="game-card">
+                <div class="card-header">
+                    <span class="card-number">05</span>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2 C18 2 21 8 21 13 C21 18 17 22 12 22 C7 22 3 18 3 13 C3 8 6 2 12 2 Z"/>
+                            <path d="M12 2 L12 22"/>
+                            <path d="M12 10 L17 9"/>
+                            <path d="M12 15 L16 13"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="card-title">Season Sense</h2>
+                <p class="card-desc">
+                    感受此刻的季节。不是日历上的季节，是空气、光线和温度告诉你，现在是什么季节。
+                </p>
+                <div class="card-footer">
+                    <span class="card-tag">感知</span>
+                    <div class="card-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="stars.html" class="game-card">
+                <div class="card-header">
+                    <span class="card-number">06</span>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2 L13.5 8.5 L20 9.5 L14.5 13.5 L16 20 L12 16.5 L8 20 L9.5 13.5 L4 9.5 L10.5 8.5 Z" fill="white" stroke="none"/>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="card-title">Star Map</h2>
+                <p class="card-desc">
+                    一片属于你的星空。每次打开都是不同的星座，每颗星都有一个没人在听的故事。
+                </p>
+                <div class="card-footer">
+                    <span class="card-tag">星空</span>
+                    <div class="card-arrow">→</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="footer">
+            <div class="footer-logo">CREOLE</div>
+            <p class="footer-text">异想小站 · Chapter 02 · 2026</p>
+        </div>
+    </div>
+</body>
+</html>

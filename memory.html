@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MEMORY MATCH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header { margin-bottom: 24px; }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            padding: 10px 16px;
+            min-width: 80px;
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--accent-purple);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 4px 4px 0 var(--ink);
+            aspect-ratio: 1;
+        }
+
+        .card {
+            position: relative;
+            aspect-ratio: 1;
+            cursor: pointer;
+            perspective: 600px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 12px;
+        }
+
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--ink);
+            font-size: clamp(24px, 6vw, 40px);
+            user-select: none;
+        }
+
+        .card-front {
+            background: white;
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .card-front::after {
+            content: '?';
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(20px, 5vw, 32px);
+            font-weight: 900;
+            color: var(--ink-muted);
+        }
+
+        .card-back {
+            background: var(--paper-dark);
+            transform: rotateY(180deg);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .card.matched .card-back {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            box-shadow: none;
+            transform: rotateY(180deg) scale(0.95);
+            opacity: 0.8;
+        }
+
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 28px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover { color: var(--ink); }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(245, 241, 235, 0.95);
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink);
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-toggle:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .sound-toggle:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 返回游戏厅</a>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">♪</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 06</div>
+            <h1>Memory</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">步数</div>
+                    <div class="stat-value" id="moves">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">配对</div>
+                    <div class="stat-value" id="pairs">0/8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="board" id="board"></div>
+
+        <button class="btn" onclick="initGame()">重新开始</button>
+    </div>
+
+    <script>
+        const boardEl = document.getElementById('board');
+        const movesEl = document.getElementById('moves');
+        const pairsEl = document.getElementById('pairs');
+
+        const EMOJIS = ['●','▲','■','★','◆','⬟','♥','⬢'];
+        let cards = [];
+        let flipped = [];
+        let matched = new Set();
+        let moves = 0;
+        let locked = false;
+
+        // 音效
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(freq, type, duration, volume = 0.04) {
+            if (!soundEnabled || !audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '♪' : '✕';
+        }
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function initGame() {
+            cards = shuffle([...EMOJIS, ...EMOJIS]).map((emoji, idx) => ({ id: idx, emoji, flipped: false, matched: false }));
+            flipped = [];
+            matched = new Set();
+            moves = 0;
+            locked = false;
+            movesEl.textContent = '0';
+            pairsEl.textContent = '0/8';
+            render();
+        }
+
+        function render() {
+            boardEl.innerHTML = '';
+            cards.forEach((card, idx) => {
+                const el = document.createElement('div');
+                el.className = 'card' + (card.flipped ? ' flipped' : '') + (card.matched ? ' matched' : '');
+                el.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-front"></div>
+                        <div class="card-face card-back">${card.emoji}</div>
+                    </div>
+                `;
+                el.addEventListener('click', () => handleFlip(idx));
+                boardEl.appendChild(el);
+            });
+        }
+
+        function handleFlip(idx) {
+            initAudio();
+            if (locked) return;
+            const card = cards[idx];
+            if (card.flipped || card.matched) return;
+
+            card.flipped = true;
+            flipped.push(idx);
+            playSound(600, 'sine', 0.08, 0.03);
+            render();
+
+            if (flipped.length === 2) {
+                moves++;
+                movesEl.textContent = moves;
+                const [a, b] = flipped;
+                if (cards[a].emoji === cards[b].emoji) {
+                    cards[a].matched = true;
+                    cards[b].matched = true;
+                    matched.add(a);
+                    matched.add(b);
+                    flipped = [];
+                    pairsEl.textContent = `${matched.size / 2}/8`;
+                    playSound(900, 'sine', 0.15, 0.04);
+                    render();
+                    if (matched.size === 16) {
+                        setTimeout(() => {
+                            playSound(1200, 'sine', 0.4, 0.05);
+                        }, 200);
+                    }
+                } else {
+                    locked = true;
+                    playSound(200, 'sine', 0.2, 0.04);
+                    setTimeout(() => {
+                        cards[a].flipped = false;
+                        cards[b].flipped = false;
+                        flipped = [];
+                        locked = false;
+                        render();
+                    }, 800);
+                }
+            }
+        }
+
+        initGame();
+
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

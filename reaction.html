@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>REACTION TEST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --paper: #F5F1EB;
+            --paper-dark: #E8E4DD;
+            --ink: #1C1B1A;
+            --ink-muted: #6B6966;
+            --accent-pink: #E91E63;
+            --accent-blue: #2196F3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-purple: #9C27B0;
+            --accent-yellow: #FDD835;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 纸张噪点纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 8vw, 56px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 0.95;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--ink-muted);
+            line-height: 1.7;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-item {
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            padding: 14px 20px;
+            min-width: 100px;
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--ink-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--accent-pink);
+        }
+
+        /* 测试区域 */
+        .test-area {
+            width: 100%;
+            aspect-ratio: 1;
+            max-width: 360px;
+            margin: 0 auto 24px;
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 4px 4px 0 var(--ink);
+        }
+
+        .test-area:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .test-area.waiting {
+            background: var(--paper-dark);
+        }
+
+        .test-area.ready {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .test-area.result {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .test-area.early {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+        }
+
+        .test-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(16px, 4vw, 24px);
+            text-align: center;
+            line-height: 1.6;
+            z-index: 1;
+            font-weight: 700;
+        }
+
+        .test-time {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 10vw, 64px);
+            font-weight: 900;
+            color: white;
+            text-shadow: none;
+        }
+
+        /* 按钮 */
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 14px 28px;
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 var(--ink-muted);
+        }
+
+        .btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        /* 历史记录 */
+        .history {
+            margin-top: 32px;
+            text-align: left;
+        }
+
+        .history-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            font-style: italic;
+            color: var(--ink-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid var(--paper-dark);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .history-rank {
+            font-family: 'Playfair Display', serif;
+            color: var(--ink-muted);
+            min-width: 30px;
+            font-style: italic;
+        }
+
+        .history-time {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            color: var(--accent-pink);
+        }
+
+        .history-badge {
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-perfect { background: var(--accent-green); color: white; }
+        .badge-good { background: var(--accent-blue); color: white; }
+        .badge-normal { background: var(--accent-yellow); color: var(--ink); }
+        .badge-slow { background: var(--accent-orange); color: white; }
+        .badge-too-slow { background: var(--accent-pink); color: white; }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: var(--ink-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--ink);
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(245, 241, 235, 0.95);
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink);
+            backdrop-filter: blur(10px);
+        }
+
+        .sound-toggle:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink);
+        }
+
+        .sound-toggle:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <a href="games.html" class="back-link">← 返回游戏厅</a>
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">♪</button>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-number">Chapter 02</div>
+            <h1>Reaction</h1>
+            <p>测试你的反应速度<br>绿色出现时尽快点击</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">平均</div>
+                <div class="stat-value" id="avgTime">--</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">最佳</div>
+                <div class="stat-value" id="bestTime">--</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">次数</div>
+                <div class="stat-value" id="attempts">0</div>
+            </div>
+        </div>
+
+        <div class="test-area waiting" id="testArea">
+            <div class="test-text" id="testText">点击开始测试</div>
+        </div>
+
+        <button class="btn hidden" id="resetBtn" onclick="resetGame()">重新开始</button>
+
+        <div class="history hidden" id="history">
+            <div class="history-title">历史记录</div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const testArea = document.getElementById('testArea');
+        const testText = document.getElementById('testText');
+        const avgTimeEl = document.getElementById('avgTime');
+        const bestTimeEl = document.getElementById('bestTime');
+        const attemptsEl = document.getElementById('attempts');
+        const resetBtn = document.getElementById('resetBtn');
+        const historyEl = document.getElementById('history');
+        const historyList = document.getElementById('historyList');
+
+        let state = 'idle';
+        let startTime = 0;
+        let timeoutId = null;
+        let results = [];
+        let bestTime = Infinity;
+
+        // 音效
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(freq, type, duration, volume = 0.06) {
+            if (!soundEnabled || !audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function getBadge(time) {
+            if (time < 200) return { text: 'PERFECT', class: 'badge-perfect' };
+            if (time < 300) return { text: 'GOOD', class: 'badge-good' };
+            if (time < 400) return { text: 'NORMAL', class: 'badge-normal' };
+            if (time < 500) return { text: 'SLOW', class: 'badge-slow' };
+            return { text: 'TOO SLOW', class: 'badge-too-slow' };
+        }
+
+        function updateStats() {
+            if (results.length === 0) {
+                avgTimeEl.textContent = '--';
+                bestTimeEl.textContent = '--';
+            } else {
+                const avg = Math.round(results.reduce((a, b) => a + b, 0) / results.length);
+                avgTimeEl.textContent = avg + 'ms';
+                bestTimeEl.textContent = bestTime === Infinity ? '--' : bestTime + 'ms';
+            }
+            attemptsEl.textContent = results.length;
+        }
+
+        function addHistory(time) {
+            results.push(time);
+            if (time < bestTime) bestTime = time;
+            
+            const badge = getBadge(time);
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <span class="history-rank">#${results.length}</span>
+                <span class="history-time">${time}ms</span>
+                <span class="history-badge ${badge.class}">${badge.text}</span>
+            `;
+            historyList.insertBefore(item, historyList.firstChild);
+            updateStats();
+        }
+
+        function startWaiting() {
+            initAudio();
+            state = 'waiting';
+            testArea.className = 'test-area waiting';
+            testText.textContent = '等待绿色...';
+            testText.style.color = 'var(--ink-muted)';
+            
+            const delay = 1500 + Math.random() * 2500;
+            timeoutId = setTimeout(() => {
+                state = 'ready';
+                testArea.className = 'test-area ready';
+                testText.textContent = '点击！';
+                testText.style.color = 'var(--paper)';
+                startTime = performance.now();
+                playSound(800, 'sine', 0.1, 0.04);
+            }, delay);
+        }
+
+        function handleClick(e) {
+            e.preventDefault();
+            
+            if (state === 'idle') {
+                startWaiting();
+                return;
+            }
+            
+            if (state === 'waiting') {
+                clearTimeout(timeoutId);
+                state = 'early';
+                testArea.className = 'test-area early';
+                testText.textContent = '太早了！\n点击重试';
+                testText.style.color = 'white';
+                playSound(150, 'sine', 0.3, 0.06);
+                resetBtn.classList.remove('hidden');
+                return;
+            }
+            
+            if (state === 'ready') {
+                const endTime = performance.now();
+                const reactionTime = Math.round(endTime - startTime);
+                state = 'result';
+                testArea.className = 'test-area result';
+                testText.innerHTML = `<span class="test-time">${reactionTime}ms</span>`;
+                testText.style.color = 'white';
+                playSound(1000, 'sine', 0.15, 0.04);
+                
+                addHistory(reactionTime);
+                resetBtn.classList.remove('hidden');
+                historyEl.classList.remove('hidden');
+                return;
+            }
+            
+            if (state === 'result' || state === 'early') {
+                startWaiting();
+                resetBtn.classList.add('hidden');
+            }
+        }
+
+        function resetGame() {
+            clearTimeout(timeoutId);
+            state = 'idle';
+            testArea.className = 'test-area waiting';
+            testText.textContent = '点击开始测试';
+            testText.style.color = 'var(--ink-muted)';
+            resetBtn.classList.add('hidden');
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundToggle').textContent = soundEnabled ? '♪' : '✕';
+        }
+
+        testArea.addEventListener('mousedown', handleClick);
+        testArea.addEventListener('touchstart', handleClick, { passive: false });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                handleClick(e);
+            }
+        });
+
+        updateStats();
+        
+        // 初始化音效
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>
