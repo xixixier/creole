@@ -25,13 +25,10 @@
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
             background: var(--paper);
             color: var(--ink);
-            overflow: hidden;
-            touch-action: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y;
             -webkit-tap-highlight-color: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             min-height: 100vh;
             position: relative;
         }
@@ -53,7 +50,12 @@
             width: 100%;
             max-width: 480px;
             padding: 24px;
+            margin: 0 auto;
             text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .header {
@@ -124,6 +126,7 @@
             margin-bottom: 20px;
             box-shadow: 4px 4px 0 var(--ink);
             aspect-ratio: 1;
+            touch-action: none;
         }
 
         .tile {
@@ -302,6 +305,17 @@
             font-size: 12px;
             color: var(--ink-muted);
             letter-spacing: 1px;
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 16px; }
+            .game-board {
+                gap: 6px;
+                padding: 10px;
+                border-radius: 14px;
+            }
+            .tile { border-radius: 8px; }
+            .btn { padding: 12px 22px; }
         }
     </style>
 </head>
@@ -541,12 +555,12 @@
         let touchStartX = 0;
         let touchStartY = 0;
 
-        document.addEventListener('touchstart', (e) => {
+        boardEl.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
         }, { passive: false });
 
-        document.addEventListener('touchend', (e) => {
+        boardEl.addEventListener('touchend', (e) => {
             if (!touchStartX || !touchStartY) return;
             
             const touchEndX = e.changedTouches[0].clientX;

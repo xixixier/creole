@@ -25,13 +25,10 @@
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
             background: var(--paper);
             color: var(--ink);
-            overflow: hidden;
-            touch-action: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y;
             -webkit-tap-highlight-color: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             min-height: 100vh;
             position: relative;
         }
@@ -52,7 +49,12 @@
             width: 100%;
             max-width: 500px;
             padding: 24px;
+            margin: 0 auto;
             text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .header { margin-bottom: 20px; }
@@ -119,6 +121,7 @@
             border-radius: 16px;
             box-shadow: 4px 4px 0 var(--ink);
             overflow: hidden;
+            touch-action: none;
         }
 
         canvas {
@@ -243,6 +246,14 @@
             color: var(--ink-muted);
             margin-bottom: 32px;
             line-height: 1.7;
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 16px; }
+            .canvas-wrapper {
+                max-width: 100%;
+                border-radius: 14px;
+            }
         }
     </style>
 </head>
@@ -473,11 +484,11 @@
 
         let touchStartX = 0;
         let touchStartY = 0;
-        document.addEventListener('touchstart', (e) => {
+        canvas.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
         }, { passive: true });
-        document.addEventListener('touchend', (e) => {
+        canvas.addEventListener('touchend', (e) => {
             const dx = e.changedTouches[0].clientX - touchStartX;
             const dy = e.changedTouches[0].clientY - touchStartY;
             if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
