@@ -102,8 +102,8 @@
 
         .pixel-cell {
             aspect-ratio: 1;
-            background: var(--paper-dark);
-            border: 1px solid var(--paper-dark);
+            background: #F7F4EF;
+            border: 1px solid #D2CEC6;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.1s;
@@ -384,7 +384,7 @@
         function renderPixels() {
             const cells = pixelGrid.querySelectorAll('.pixel-cell');
             cells.forEach((cell, i) => {
-                cell.style.background = pixelData[i] || '#E8E4DD';
+                cell.style.background = pixelData[i] || '#F7F4EF';
             });
         }
 
