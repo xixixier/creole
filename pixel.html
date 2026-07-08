@@ -153,6 +153,61 @@
             box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
         }
 
+        .color-dot.eraser {
+            background: #F7F4EF;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .size-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .size-label {
+            font-size: 12px;
+            color: var(--ink-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+
+        .size-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 14px;
+            background: var(--paper);
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0 var(--ink-muted);
+        }
+
+        .size-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 var(--ink-muted);
+        }
+
+        .size-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--ink-muted);
+        }
+
+        .size-btn.active {
+            background: var(--ink);
+            color: var(--paper);
+        }
+
         .controls {
             display: flex;
             gap: 12px;
@@ -285,6 +340,13 @@
 
         <div class="color-palette" id="colorPalette"></div>
 
+        <div class="size-selector" id="sizeSelector">
+            <span class="size-label">画板</span>
+            <button class="size-btn active" data-size="8" onclick="setSize(8)">8×8</button>
+            <button class="size-btn" data-size="16" onclick="setSize(16)">16×16</button>
+            <button class="size-btn" data-size="32" onclick="setSize(32)">32×32</button>
+        </div>
+
         <div class="canvas-wrapper">
             <div class="pixel-grid" id="pixelGrid"></div>
         </div>
@@ -300,7 +362,7 @@
         const pixelGrid = document.getElementById('pixelGrid');
         const colorPalette = document.getElementById('colorPalette');
         
-        const GRID_SIZE = 8;
+        let GRID_SIZE = 8;
         const colors = [
             '#E91E63', '#9C27B0', '#673AB7', '#3F51B5',
             '#2196F3', '#03A9F4', '#00BCD4', '#009688',
@@ -340,53 +402,91 @@
         let selectedColor = colors[0];
         let pixelData = Array(GRID_SIZE * GRID_SIZE).fill(null);
 
+        function selectColor(color, dot) {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+            selectedColor = color;
+        }
+
         // 初始化调色板
         function initPalette() {
             colors.forEach((color, index) => {
                 const dot = document.createElement('div');
                 dot.className = 'color-dot' + (index === 0 ? ' active' : '');
                 dot.style.background = color;
-                dot.onclick = () => {
-                    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-                    dot.classList.add('active');
-                    selectedColor = color;
-                };
+                dot.onclick = () => selectColor(color, dot);
                 colorPalette.appendChild(dot);
             });
+            const eraser = document.createElement('div');
+            eraser.className = 'color-dot eraser';
+            eraser.textContent = '⌫';
+            eraser.title = '橡皮';
+            eraser.onclick = () => selectColor(null, eraser);
+            colorPalette.appendChild(eraser);
         }
 
         // 初始化网格
         function initGrid() {
+            pixelGrid.style.gridTemplateColumns = 'repeat(' + GRID_SIZE + ', 1fr)';
             pixelGrid.innerHTML = '';
             for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'pixel-cell';
                 cell.dataset.index = i;
-                cell.addEventListener('click', () => togglePixel(i));
                 pixelGrid.appendChild(cell);
-            }
-        }
-
-        function togglePixel(index) {
-            const current = pixelData[index];
-            if (current === null) {
-                pixelData[index] = selectedColor;
-                playSound(600, 'sine', 0.05, 0.03);
-            } else if (current === selectedColor) {
-                pixelData[index] = null;
-                playSound(400, 'sine', 0.05, 0.03);
-            } else {
-                pixelData[index] = selectedColor;
-                playSound(600, 'sine', 0.05, 0.03);
             }
             renderPixels();
         }
 
+        function paint(index) {
+            pixelData[index] = selectedColor;
+            const cell = pixelGrid.children[index];
+            if (cell) cell.style.background = pixelData[index] || '#F7F4EF';
+        }
+
         function renderPixels() {
-            const cells = pixelGrid.querySelectorAll('.pixel-cell');
-            cells.forEach((cell, i) => {
-                cell.style.background = pixelData[i] || '#F7F4EF';
-            });
+            const cells = pixelGrid.children;
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].style.background = pixelData[i] || '#F7F4EF';
+            }
+        }
+
+        // 拖拽连续涂色（鼠标 + 触摸）
+        let drawing = false;
+        function cellFromPoint(x, y) {
+            const el = document.elementFromPoint(x, y);
+            return (el && el.classList && el.classList.contains('pixel-cell')) ? el : null;
+        }
+        pixelGrid.addEventListener('mousedown', (e) => {
+            const c = e.target.closest('.pixel-cell');
+            if (c) { drawing = true; paint(parseInt(c.dataset.index)); playSound(600, 'sine', 0.05, 0.03); }
+        });
+        pixelGrid.addEventListener('mousemove', (e) => {
+            if (!drawing) return;
+            const c = e.target.closest('.pixel-cell');
+            if (c) paint(parseInt(c.dataset.index));
+        });
+        window.addEventListener('mouseup', () => { drawing = false; });
+        pixelGrid.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            const c = cellFromPoint(t.clientX, t.clientY);
+            if (c) { drawing = true; paint(parseInt(c.dataset.index)); playSound(600, 'sine', 0.05, 0.03); e.preventDefault(); }
+        }, { passive: false });
+        pixelGrid.addEventListener('touchmove', (e) => {
+            const t = e.touches[0];
+            const c = cellFromPoint(t.clientX, t.clientY);
+            if (c) paint(parseInt(c.dataset.index));
+            e.preventDefault();
+        }, { passive: false });
+        window.addEventListener('touchend', () => { drawing = false; });
+
+        function setSize(n) {
+            if (n === GRID_SIZE) return;
+            GRID_SIZE = n;
+            pixelData = new Array(n * n).fill(null);
+            initGrid();
+            document.querySelectorAll('.size-btn').forEach(b =>
+                b.classList.toggle('active', parseInt(b.dataset.size) === n));
         }
 
         function fillRandom() {
