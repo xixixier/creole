@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图标总览 — Creole 异想小站</title>
+<style>
+  :root{
+    --paper:#F5F1EB; --paper-dark:#E8E4DD; --ink:#1C1B1A; --ink-muted:#6B6966;
+    --accent-pink:#E91E63; --accent-blue:#2196F3; --accent-green:#4CAF50;
+    --accent-orange:#FF9800; --accent-purple:#9C27B0; --accent-yellow:#FDD835;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter','Noto Sans SC',sans-serif;background:var(--paper);color:var(--ink);padding:40px 24px 80px;}
+  h1{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;letter-spacing:-1px;margin-bottom:6px;}
+  .sub{color:var(--ink-muted);margin-bottom:36px;font-size:14px;letter-spacing:1px;}
+  section{margin-bottom:48px;}
+  .sec-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-bottom:4px;display:flex;align-items:baseline;gap:12px;}
+  .sec-title .n{font-size:13px;color:var(--ink-muted);font-style:italic;}
+  .sec-note{color:var(--ink-muted);font-size:13px;margin-bottom:20px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px;}
+  .tile{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:4px 4px 0 var(--ink);}
+  .tile .icon-wrap{width:72px;height:72px;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .tile .icon-wrap svg{width:44px;height:44px;}
+  .tile .label{font-size:13px;font-weight:600;text-align:center;line-height:1.4;}
+  .tile .en{font-size:11px;color:var(--ink-muted);text-align:center;font-weight:400;}
+  .paper{background:var(--paper);}
+  .dark{background:#1C1B1A;}
+  .chip-pink{background:var(--accent-pink);}
+  .chip-blue{background:var(--accent-blue);}
+  .chip-green{background:var(--accent-green);}
+  .chip-orange{background:var(--accent-orange);}
+  .chip-purple{background:var(--accent-purple);}
+  .chip-yellow{background:var(--accent-yellow);}
+  .tint-green{background:#E8F3E8;}
+  .tint-blue{background:#E6F0F7;}
+  .tint-gray{background:#EEEEEC;}
+</style>
+</head>
+<body>
+  <h1>站点图标总览</h1>
+  <div class="sub">Creole 异想小站 · 全部 41 个图案图标 · 按所在页面分组</div>
+
+  <section>
+    <div class="sec-title">游戏厅入口图标 <span class="n">games.html · 8</span></div>
+    <div class="sec-note">白描边 · 彩色底</div>
+    <div class="grid" id="games"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">奇物柜入口图标 <span class="n">curio.html · 6</span></div>
+    <div class="sec-note">白描边 · 彩色底</div>
+    <div class="grid" id="curio"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">占卜意象图案 <span class="n">oracle.html · 18</span></div>
+    <div class="sec-note">紫描边（accent-purple）· 纸底</div>
+    <div class="grid" id="oracle"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">节气主图标 <span class="n">season.html · 6</span></div>
+    <div class="sec-note">墨描边（ink）· 纸底</div>
+    <div class="grid" id="seasonVisual"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">节气飘落粒子 <span class="n">season.html · 6</span></div>
+    <div class="sec-note">随主题着色（currentColor）· 浅色底</div>
+    <div class="grid" id="seasonParticle"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">记忆盒图标 <span class="n">memory-box.html · 2</span></div>
+    <div class="sec-note">墨描边 · 纸底</div>
+    <div class="grid" id="membox"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">星图图标 <span class="n">stars.html · 1</span></div>
+    <div class="sec-note">浅描边 · 深底</div>
+    <div class="grid" id="stars"></div>
+  </section>
+
+<script>
+const WHITE = 'fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const PURPLE = 'fill="none" stroke="var(--accent-purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const INK = 'fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+
+const games = [
+  ['Brick Breaker','打砖块',`<rect x="3" y="3" width="4.5" height="3" rx="1"/><rect x="9.75" y="3" width="4.5" height="3" rx="1"/><rect x="16.5" y="3" width="4.5" height="3" rx="1"/><rect x="3" y="8" width="4.5" height="3" rx="1"/><rect x="9.75" y="8" width="4.5" height="3" rx="1"/><rect x="16.5" y="8" width="4.5" height="3" rx="1"/><circle cx="12" cy="15" r="1.8" fill="white" stroke="none"/><rect x="7" y="19.5" width="10" height="2.5" rx="1.25"/>`],
+  ['Reaction','反应力',`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2" fill="white" stroke="none"/>`],
+  ['2048','数字合并',`<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>`],
+  ['Gravity','重力弹球',`<line x1="4" y1="21" x2="20" y2="21"/><circle cx="12" cy="8" r="3.5" fill="white" stroke="none"/><path d="M12 12 L12 18"/><path d="M9 15 L12 18 L15 15"/>`],
+  ['Pixel Art','像素画板',`<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><rect x="4" y="4" width="4" height="4" rx="0.5" fill="white" stroke="none"/><rect x="16" y="10" width="4" height="4" rx="0.5" fill="white" stroke="none"/><rect x="10" y="16" width="4" height="4" rx="0.5" fill="white" stroke="none"/>`],
+  ['Memory','记忆翻牌',`<rect x="3.5" y="5" width="10" height="14" rx="2" transform="rotate(-10 8.5 12)"/><rect x="10.5" y="5" width="10" height="14" rx="2"/><path d="M13.5 9 H17.5 M13.5 12 H17.5 M13.5 15 H17.5" stroke-width="1.3"/>`],
+  ['Snake','贪吃蛇',`<circle cx="5" cy="18.5" r="2.1"/><path d="M5 16.4 V14.8"/><path d="M7.5 17 C7.5 13.5 12.5 13.5 11.5 9.8 C10.9 6.8 7 7 8.6 3.9" stroke-width="2.2"/><circle cx="8.6" cy="3.9" r="2.4"/><circle cx="9.3" cy="3.4" r="0.7" fill="#1C1B1A" stroke="none"/><path d="M8.6 1.6 L8.6 0.5 M8.6 0.5 L7.9 0 M8.6 0.5 L9.3 0" stroke-width="1.3"/>`],
+  ['Simon','色彩记忆',`<circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2 A10 10 0 0 1 22 12 L12 12 Z" fill="#E91E63" stroke="none" opacity="0.85"/><path d="M22 12 A10 10 0 0 1 12 22 L12 12 Z" fill="#2196F3" stroke="none" opacity="0.85"/><path d="M12 22 A10 10 0 0 1 2 12 L12 12 Z" fill="#FDD835" stroke="none" opacity="0.85"/><path d="M2 12 A10 10 0 0 1 12 2 L12 12 Z" fill="#4CAF50" stroke="none" opacity="0.85"/><circle cx="12" cy="12" r="3" fill="white" stroke="none"/>`]
+];
+
+const curio = [
+  ['Eternal Clock','永恒之钟',`<circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/><circle cx="12" cy="12" r="1" fill="white" stroke="none"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>`],
+  ['Oracle','数字占卜',`<circle cx="12" cy="9" r="6.5"/><path d="M7 14.5 Q12 19 17 14.5"/><circle cx="14" cy="7" r="0.9" fill="white" stroke="none"/>`],
+  ['Memory Box','记忆盒',`<rect x="4" y="8" width="16" height="13" rx="2"/><path d="M4 8 Q4 4 9 4 H15 Q20 4 20 8"/><line x1="12" y1="8" x2="12" y2="14"/><path d="M10 11 H14" stroke-width="1.5"/>`],
+  ['Mood Palette','情绪色板',`<path d="M12 3 C7 3 4 6 4 11 C4 15 7 18 11 18 C13 18 13 16 15 16 C18 16 20 13 20 9 C20 5 17 3 12 3 Z"/><circle cx="9" cy="9" r="1.4" fill="white" stroke="none"/><circle cx="13" cy="7" r="1.4" fill="white" stroke="none"/><circle cx="15" cy="11" r="1.4" fill="white" stroke="none"/>`],
+  ['Season Sense','季节感知',`<path d="M5 19 C5 19 5 9 12 5 C19 9 19 19 19 19 C19 19 13 16 12 11 C11 16 5 19 5 19 Z"/><path d="M12 11 L12 19"/><path d="M12 13 L9 15 M12 15 L15 17"/>`],
+  ['Star Map','专属星空',`<path d="M12 2 L13.5 8.5 L20 9.5 L14.5 13.5 L16 20 L12 16.5 L8 20 L9.5 13.5 L4 9.5 L10.5 8.5 Z" fill="white" stroke="none"/>`]
+];
+
+const oracle = [
+  ['潮','潮汐',`<path d="M2 9 C5 5 8 5 11 9 C14 13 17 13 20 9"/><path d="M3 15 C6 11 9 11 12 15 C15 19 18 19 21 15"/>`],
+  ['烛','烛火',`<path d="M9 11 H15 V20 C15 21 14 22 13 22 H11 C10 22 9 21 9 20 Z"/><path d="M9 11 C9 9.5 10 10 10.5 11 M15 11 C15 9.5 14 10 13.5 11" stroke-width="1.3"/><path d="M12 11 V8.5"/><path d="M12 8.5 C10.2 6.8 10.5 3.5 12 2.5 C13.5 3.5 13.8 6.8 12 8.5 Z"/><path d="M12 7.3 C11.3 6.2 11.5 4.6 12 4 C12.5 4.6 12.7 6.2 12 7.3 Z" fill="var(--accent-purple)" stroke="none" opacity="0.45"/>`],
+  ['落','落叶',`<path d="M5 19 C5 19 6 8 15 5 C17 13 13 19 5 19 Z"/><path d="M6.5 17.5 C10 13 12.5 9 14.5 6.5"/><path d="M5 19 L3.5 21"/><path d="M9 15 L7.5 16 M11.5 12 L10 13 M13.5 9.5 L12 10.5" stroke-width="1.2" opacity="0.55"/>`],
+  ['石','石头',`<path d="M5 13 L8 8 L13 7 L18 10 L20 15 L16 20 L10 20 L5 17 Z"/><path d="M8 8 L11 13 L18 10" stroke-width="1.3" opacity="0.55"/><path d="M10 20 L12 15 L16 20" stroke-width="1.3" opacity="0.55"/>`],
+  ['雾','雾',`<path d="M7 13 C4 13 4 9 7 9 C7 5 13 5 14 8 C17 6 20 9 19 12 C21 12 21 14 19 14 Z"/><path d="M6 18 H10 M12 18 H16 M9 21 H14" stroke-width="1.4" opacity="0.7"/>`],
+  ['沙','沙漏',`<path d="M7 4 H17 L12 12 Z"/><path d="M7 20 H17 L12 12 Z"/><path d="M6 4 H18 M6 20 H18"/><path d="M12 12 V16" stroke-width="1.3"/><path d="M10 18 H14" stroke-width="1.3"/>`],
+  ['镜','镜子',`<ellipse cx="12" cy="8.5" rx="6" ry="6.5"/><path d="M12 15 V20"/><path d="M9.5 20 H14.5"/><path d="M9 6 C10 4.5 12 5 12.5 7" stroke-width="1.3" opacity="0.55"/>`],
+  ['种','种子',`<path d="M12 20 C9 20 8 16 9 12.5 C10 10.5 12 10.5 12 10.5 C12 10.5 14 10.5 15 12.5 C16 16 15 20 12 20 Z"/><path d="M12 10.5 V4.5"/><path d="M12 7.5 C10 6.5 9 4.5 9 3.5 M12 7.5 C14 6.5 15 4.5 15 3.5" stroke-width="1.3"/>`],
+  ['梯','梯子',`<path d="M8 3 V21 M16 3 V21 M8 7 H16 M8 11 H16 M8 15 H16 M8 19 H16"/>`],
+  ['月','月相',`<path d="M16 4 C11 4 7 9 7 14 C7 19 11 21 16 20 C12 18 12 9 16 4 Z"/><circle cx="17.5" cy="8" r="0.8" fill="var(--accent-purple)" stroke="none"/><circle cx="16" cy="13" r="0.6" fill="var(--accent-purple)" stroke="none"/>`],
+  ['窗','窗户',`<rect x="5" y="4" width="14" height="14" rx="1.5"/><path d="M12 4 V18 M5 11 H19"/><path d="M4 18 H20"/>`],
+  ['烬','余烬',`<path d="M4 16 C3.5 13.5 6.5 12 8.5 13.5 C10 14.5 9.5 17.5 7.5 18 C5.5 18.5 4.5 18 4 16 Z"/><path d="M13.5 17 C13 15 15 13.5 17 14 C19 14.5 19 17.5 17 18 C15 18.5 14 18.5 13.5 17 Z"/><circle cx="6.5" cy="15" r="1" fill="var(--accent-purple)" stroke="none"/><circle cx="16" cy="16" r="0.9" fill="var(--accent-purple)" stroke="none"/><path d="M9.5 11 L9.5 8 M9.5 8 L8.5 6.5 M9.5 8 L10.5 6.5" stroke-width="1.2"/><circle cx="12.5" cy="6" r="0.7" fill="var(--accent-purple)" stroke="none"/><circle cx="14.5" cy="9.5" r="0.6" fill="var(--accent-purple)" stroke="none"/>`],
+  ['轨','轨道',`<ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(-22 12 12)"/><circle cx="12" cy="12" r="2.2"/><circle cx="19.5" cy="8" r="1.6" fill="var(--accent-purple)" stroke="none"/>`],
+  ['向','指南针',`<circle cx="12" cy="12" r="9"/><path d="M12 5 L14.5 12 L12 11 Z" fill="var(--accent-purple)" stroke="none"/><path d="M12 19 L9.5 12 L12 13 Z" fill="var(--accent-purple)" stroke="none" opacity="0.5"/><circle cx="12" cy="12" r="1.1" fill="white" stroke="none"/>`],
+  ['泡','气泡',`<circle cx="11" cy="13" r="7.5"/><path d="M7.5 10 A5.5 5.5 0 0 1 13 7.5" stroke-width="1.3" opacity="0.55"/><circle cx="8.5" cy="10.5" r="1.3" fill="var(--accent-purple)" stroke="none" opacity="0.5"/><circle cx="19.5" cy="6.5" r="2"/><circle cx="20.5" cy="16.5" r="1.3"/>`],
+  ['砖','砖块',`<path d="M4 6 H20 V18 H4 Z"/><path d="M4 12 H20 M9 6 V12 M15 12 V18"/>`],
+  ['缝','针线',`<path d="M5 19 L16 5"/><circle cx="16" cy="5" r="1.6"/><path d="M16 5 C18.5 6.5 18 9.5 15.5 10.5" stroke-width="1.3"/><path d="M5 19 L8 16 M10 17.5 L13 14.5 M15 12.5 L17 10.5" stroke-width="1.3" opacity="0.6"/>`],
+  ['轮','年轮',`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3"/><path d="M12 3 V12" stroke-width="1.3" opacity="0.6"/>`]
+];
+
+const seasonVisual = [
+  ['春分','嫩芽',`<path d="M12 21 V11"/><path d="M12 11 C12 8 9 6 6 6 C6 9 9 11 12 11 Z"/><path d="M12 9 C12 6 15 4 18 4 C18 7 15 9 12 9 Z"/>`],
+  ['夏至','太阳',`<circle cx="12" cy="12" r="4.5"/><path d="M12 2 V6 M12 18 V22 M2 12 H6 M18 12 H22 M5 5 L8 8 M16 16 L19 19 M19 5 L16 8 M8 16 L5 19"/>`],
+  ['秋分','叶脉',`<path d="M12 3 C12 3 5 7 5 13 C5 18 12 21 12 21 C12 21 19 18 19 13 C19 7 12 3 12 3 Z"/><path d="M12 3 V21"/><path d="M12 9 C9 9 7 10 6 12 M12 13 C15 13 17 14 18 16"/>`],
+  ['冬至','雪花',`<g><path d="M12 12 V2 M12 5 L10 3.5 M12 5 L14 3.5"/><path d="M12 12 V2 M12 5 L10 3.5 M12 5 L14 3.5" transform="rotate(60 12 12)"/><path d="M12 12 V2 M12 5 L10 3.5 M12 5 L14 3.5" transform="rotate(120 12 12)"/><path d="M12 12 V2 M12 5 L10 3.5 M12 5 L14 3.5" transform="rotate(180 12 12)"/><path d="M12 12 V2 M12 5 L10 3.5 M12 5 L14 3.5" transform="rotate(240 12 12)"/><path d="M12 12 V2 M12 5 L10 3.5 M12 5 L14 3.5" transform="rotate(300 12 12)"/></g>`],
+  ['梅雨季','云雨',`<path d="M7 14 C4 14 3 10 6 9 C6 5 11 4 13 6 C15 4 19 6 19 10 C21 10 21 14 18 14 Z"/><path d="M9 17 L9 20 M13 17 L13 21 M17 17 L17 19"/>`],
+  ['台风天','旋风',`<path d="M12 12 C12 9 15 9 15 12 C15 16 9 16 8 12 C7 7 13 4 18 7 C21 10 20 16 15 19 C8 22 3 16 5 10"/>`]
+];
+
+const seasonParticle = [
+  ['春分','嫩芽',`<path d="M12 21 C12 21 6 16 6 10 C6 5 10 3 12 3 C14 3 18 5 18 10 C18 16 12 21 12 21 Z"/><path d="M12 21 V7"/>`,'tint-green'],
+  ['夏至','太阳',`<circle cx="12" cy="12" r="3.5"/><path d="M12 3 V5.5 M12 18.5 V21 M3 12 H5.5 M18.5 12 H21 M5.5 5.5 L7.2 7.2 M16.8 16.8 L18.5 18.5 M18.5 5.5 L16.8 7.2 M7.2 16.8 L5.5 18.5"/>`,'tint-yellow'],
+  ['秋分','叶',`<path d="M12 3 C12 3 7 7 7 13 C7 18 12 21 12 21 C12 21 17 18 17 13 C17 7 12 3 12 3 Z"/><path d="M12 3 V21"/><path d="M12 9 C10 9 8.5 10 7.5 11.5 M12 13 C14 13 15.5 14 16.5 15.5"/>`,'tint-orange'],
+  ['冬至','雪',`<g><path d="M12 12 V2"/><path d="M12 12 V2" transform="rotate(60 12 12)"/><path d="M12 12 V2" transform="rotate(120 12 12)"/><path d="M12 12 V2" transform="rotate(180 12 12)"/><path d="M12 12 V2" transform="rotate(240 12 12)"/><path d="M12 12 V2" transform="rotate(300 12 12)"/></g>`,'tint-blue'],
+  ['梅雨季','雨滴',`<path d="M12 3 C12 3 6 11 6 15 C6 18.3 8.7 21 12 21 C15.3 21 18 18.3 18 15 C18 11 12 3 12 3 Z"/><path d="M9 19 L9 21 M15 18 L15 20" stroke-width="1.3" opacity="0.6"/>`,'tint-blue'],
+  ['台风天','风',`<path d="M12 12 C12 9.5 14.5 9.5 14.5 12 C14.5 15.5 9 15.5 8 12 C7 8 13 5.5 17.5 8 C20.5 10.3 19.5 16 15 18.5 C9 21.5 4 15.5 6 9.5"/>`,'tint-gray']
+];
+
+const membox = [
+  ['空状态','尚未封存',`<rect x="4" y="8" width="16" height="13" rx="2"/><path d="M4 8 Q4 4 9 4 H15 Q20 4 20 8"/><line x1="12" y1="8" x2="12" y2="14"/><path d="M10 11 H14"/>`,'ink-muted'],
+  ['已封存','封存完成',`<rect x="4" y="8" width="16" height="13" rx="2"/><path d="M4 8 Q4 4 9 4 H15 Q20 4 20 8"/><path d="M9 12 L11 14 L15 10"/>`,'ink']
+];
+
+const stars = [
+  ['星图','一颗星',`<path d="M12 2.5 L14.2 8.9 L21 9.1 L15.6 13.2 L17.6 19.7 L12 15.8 L6.4 19.7 L8.4 13.2 L3 9.1 L9.8 8.9 Z" fill="rgba(245,241,235,0.25)"/>`,'light']
+];
+
+function render(id, items, attr, opts={}){
+  const wrap = document.getElementById(id);
+  items.forEach((it, i) => {
+    const [cn, en, svg, extra] = it;
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    const chip = document.createElement('div');
+    chip.className = 'icon-wrap ' + (opts.chip ? opts.chips[i % opts.chips.length] : (extra || 'paper'));
+    if(opts.dark){ chip.classList.remove(extra); chip.classList.add('dark'); }
+    const strokeAttr = opts.dark
+      ? 'fill="none" stroke="rgba(245,241,235,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
+      : attr;
+    chip.innerHTML = `<svg viewBox="0 0 24 24" ${strokeAttr}>${svg}</svg>`;
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = cn;
+    const sub = document.createElement('div');
+    sub.className = 'en';
+    sub.textContent = en;
+    tile.appendChild(chip); tile.appendChild(label); tile.appendChild(sub);
+    wrap.appendChild(tile);
+  });
+}
+
+render('games', games, WHITE, {chip:true, chips:['chip-pink','chip-blue','chip-green','chip-orange','chip-purple','chip-pink','chip-blue','chip-green']});
+render('curio', curio, WHITE, {chip:true, chips:['chip-purple','chip-pink','chip-blue','chip-green','chip-orange','chip-yellow']});
+render('oracle', oracle, PURPLE);
+render('seasonVisual', seasonVisual, INK);
+render('seasonParticle', seasonParticle, 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"');
+render('membox', membox, INK);
+render('stars', stars, '', {dark:true});
+</script>
+</body>
+</html>
