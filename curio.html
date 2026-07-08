@@ -92,7 +92,7 @@
 
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
             gap: 32px;
             padding: 40px 0 100px;
         }
@@ -265,10 +265,42 @@
             }
             .game-card {
                 padding: 24px;
+                box-shadow:
+                    3px 3px 0 var(--ink),
+                    6px 6px 0 rgba(0,0,0,0.05);
             }
             .card-title {
                 font-size: 28px;
             }
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 0 16px; }
+            .back-link {
+                top: 12px;
+                left: 12px;
+                font-size: 12px;
+                background: var(--paper);
+                padding: 6px 10px;
+                border: 1.5px solid var(--ink);
+                border-radius: 20px;
+            }
+            .game-card {
+                padding: 20px;
+                border-radius: 14px;
+                box-shadow:
+                    2px 2px 0 var(--ink),
+                    4px 4px 0 rgba(0,0,0,0.05);
+            }
+            .card-icon {
+                width: 46px;
+                height: 46px;
+                border-radius: 12px;
+            }
+            .card-icon svg { width: 26px; height: 26px; }
+            .card-title { font-size: 24px; }
+            .card-desc { font-size: 14px; margin-bottom: 18px; }
+            .card-header { margin-bottom: 18px; }
         }
     </style>
 </head>
