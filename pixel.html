@@ -355,6 +355,7 @@
             <button class="btn" onclick="fillRandom()">随机填充</button>
             <button class="btn btn-secondary" onclick="clearGrid()">清空</button>
             <button class="btn btn-secondary" onclick="mirrorGrid()">镜像对称</button>
+            <button class="btn btn-secondary" onclick="exportPNG()">保存图片</button>
         </div>
     </div>
 
@@ -517,6 +518,30 @@
             }
             renderPixels();
             playSound(700, 'sine', 0.1, 0.03);
+        }
+
+        function exportPNG() {
+            const scale = 20;
+            const canvas = document.createElement('canvas');
+            canvas.width = GRID_SIZE * scale;
+            canvas.height = GRID_SIZE * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            for (let i = 0; i < pixelData.length; i++) {
+                const row = Math.floor(i / GRID_SIZE);
+                const col = i % GRID_SIZE;
+                ctx.fillStyle = pixelData[i] || '#F7F4EF';
+                ctx.fillRect(col * scale, row * scale, scale, scale);
+            }
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'pixel-art-' + GRID_SIZE + 'x' + GRID_SIZE + '.png';
+                a.click();
+                URL.revokeObjectURL(url);
+                playSound(800, 'sine', 0.12, 0.03);
+            });
         }
 
         // 初始化
