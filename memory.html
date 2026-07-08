@@ -121,6 +121,7 @@
             margin-bottom: 20px;
             box-shadow: 4px 4px 0 var(--ink);
             aspect-ratio: 1;
+            touch-action: manipulation;
         }
 
         .card {
@@ -257,6 +258,33 @@
         }
 
         .hidden { display: none !important; }
+
+        @media (max-width: 640px) {
+            .container { padding: 64px 16px 24px; }
+            .header { margin-bottom: 18px; }
+            .board { gap: 8px; padding: 10px; margin-bottom: 16px; }
+            .back-link {
+                background: rgba(245, 241, 235, 0.95);
+                border: 2px solid var(--ink);
+                padding: 7px 11px;
+                border-radius: 8px;
+                box-shadow: 2px 2px 0 var(--ink);
+                backdrop-filter: blur(10px);
+                top: 12px;
+                left: 12px;
+            }
+            .back-link:hover { color: var(--ink); }
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 58px 12px 20px; }
+            .header h1 { font-size: 40px; }
+            .stats { gap: 10px; margin-bottom: 18px; }
+            .stat-item { padding: 9px 14px; min-width: 84px; }
+            .stat-value { font-size: 18px; }
+            .board { gap: 6px; padding: 8px; border-radius: 14px; }
+            .btn { padding: 11px 22px; font-size: 12px; box-shadow: 2px 2px 0 var(--ink-muted); }
+        }
     </style>
 </head>
 <body>

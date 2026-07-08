@@ -25,13 +25,10 @@
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
             background: var(--paper);
             color: var(--ink);
-            overflow: hidden;
-            touch-action: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y;
             -webkit-tap-highlight-color: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             min-height: 100vh;
             position: relative;
         }
@@ -52,8 +49,13 @@
             z-index: 1;
             width: 100%;
             max-width: 500px;
-            padding: 24px;
+            padding: 70px 24px 32px;
             text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .header {
@@ -135,6 +137,7 @@
             position: relative;
             overflow: hidden;
             box-shadow: 4px 4px 0 var(--ink);
+            touch-action: none;
         }
 
         .test-area:active {
@@ -316,6 +319,34 @@
         }
 
         .hidden { display: none !important; }
+
+        @media (max-width: 640px) {
+            .container { padding: 64px 16px 24px; }
+            .header { margin-bottom: 28px; }
+            .test-area { margin-bottom: 20px; }
+            .back-link {
+                background: rgba(245, 241, 235, 0.95);
+                border: 2px solid var(--ink);
+                padding: 7px 11px;
+                border-radius: 8px;
+                box-shadow: 2px 2px 0 var(--ink);
+                backdrop-filter: blur(10px);
+                top: 12px;
+                left: 12px;
+            }
+            .back-link:hover { color: var(--ink); }
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 58px 12px 20px; }
+            .header h1 { font-size: 40px; }
+            .stats { gap: 10px; margin-bottom: 24px; }
+            .stat-item { padding: 11px 14px; min-width: 84px; }
+            .stat-value { font-size: 18px; }
+            .test-area { border-radius: 14px; max-width: 300px; }
+            .btn { padding: 11px 22px; font-size: 12px; box-shadow: 2px 2px 0 var(--ink-muted); }
+            .history-item { padding: 10px 12px; }
+        }
     </style>
 </head>
 <body>
