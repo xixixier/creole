@@ -139,7 +139,7 @@
             font-family: 'Playfair Display', serif;
             font-size: clamp(18px, 5vw, 32px);
             font-weight: 900;
-            transition: all 0.15s;
+            transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
             position: relative;
         }
 
@@ -370,6 +370,8 @@
         let best = parseInt(localStorage.getItem('2048-best') || '0');
         let gameOver = false;
         let won = false;
+        let currentValues = [];
+        const tileEls = [];
 
         // 音效
         let audioCtx = null;
@@ -408,9 +410,23 @@
             scoreEl.textContent = '0';
             bestEl.textContent = best;
             overlay.classList.add('hidden');
-            addRandomTile();
-            addRandomTile();
-            render();
+
+            // 一次性建好 16 个固定格子元素（仅开局执行，滑动时不重建，避免格子面积跳动）
+            boardEl.innerHTML = '';
+            for (let r = 0; r < 4; r++) {
+                tileEls[r] = [];
+                for (let c = 0; c < 4; c++) {
+                    const t = document.createElement('div');
+                    t.className = 'tile';
+                    boardEl.appendChild(t);
+                    tileEls[r][c] = t;
+                }
+            }
+
+            const n1 = addRandomTile();
+            const n2 = addRandomTile();
+            currentValues = grid.map(row => row.slice());
+            render([n1, n2]);
         }
 
         function addRandomTile() {
@@ -427,19 +443,29 @@
             return {r, c};
         }
 
-        function render() {
-            boardEl.innerHTML = '';
+        function render(newTiles = []) {
+            const prev = currentValues;
+            const newSet = new Set(newTiles.filter(Boolean).map(p => p.r + ',' + p.c));
             for (let r = 0; r < 4; r++) {
                 for (let c = 0; c < 4; c++) {
-                    const tile = document.createElement('div');
                     const value = grid[r][c];
-                    const tileClass = value === 0 ? 'tile tile-2' : 
+                    const tile = tileEls[r][c];
+                    tile.className = value === 0 ? 'tile tile-2' :
                                      value <= 2048 ? `tile tile-${value}` : 'tile tile-super';
-                    tile.className = tileClass;
                     tile.textContent = value === 0 ? '' : value;
-                    boardEl.appendChild(tile);
+
+                    if (newSet.has(r + ',' + c)) {
+                        tile.classList.remove('new', 'merged');
+                        void tile.offsetWidth; // 强制重排以重放动画
+                        tile.classList.add('new');
+                    } else if (prev && prev[r][c] > 0 && value === prev[r][c] * 2) {
+                        tile.classList.remove('new', 'merged');
+                        void tile.offsetWidth;
+                        tile.classList.add('merged');
+                    }
                 }
             }
+            currentValues = grid.map(row => row.slice());
         }
 
         function slide(row) {
@@ -503,8 +529,8 @@
                     bestEl.textContent = best;
                     localStorage.setItem('2048-best', best.toString());
                 }
-                addRandomTile();
-                render();
+                const newPos = addRandomTile();
+                render(newPos ? [newPos] : []);
                 playSound(300, 'sine', 0.05, 0.02);
                 
                 if (!canMove()) {
