@@ -20,14 +20,10 @@
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
             background: var(--paper);
             color: var(--ink);
-            overflow: hidden;
-            touch-action: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+            touch-action: pan-y;
             -webkit-tap-highlight-color: transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             position: relative;
         }
 
@@ -62,8 +58,13 @@
             z-index: 1;
             width: 100%;
             max-width: 420px;
-            padding: 24px;
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 48px 24px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .header { margin-bottom: 32px; }
